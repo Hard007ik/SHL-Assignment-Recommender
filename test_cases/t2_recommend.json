@@ -1,0 +1,7 @@
+{
+  "messages": [
+    {"role": "user", "content": "I need an assessment"},
+    {"role": "assistant", "content": "What is your desired role, seniority level, and primary skills?"},
+    {"role": "user", "content": "Hiring a mid-level Java developer who also needs to work well with stakeholders, entry level to mid, under 30 minutes total"}
+  ]
+}

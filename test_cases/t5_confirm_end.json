@@ -1,0 +1,13 @@
+{
+  "messages": [
+    {"role": "user", "content": "I need an assessment"},
+    {"role": "assistant", "content": "What is your desired role, seniority level, and primary skills?"},
+    {"role": "user", "content": "Hiring a mid-level Java developer who also needs to work well with stakeholders, entry level to mid, under 30 minutes total"},
+    {"role": "assistant", "content": "Here are some assessments that fit: Core Java (Entry Level) (New), Core Java (Advanced Level) (New), and Java 8 (New)."},
+    {"role": "user", "content": "Actually, also add a personality assessment for the stakeholder management part"},
+    {"role": "assistant", "content": "Updated shortlist: Core Java (Entry Level) (New), Core Java (Advanced Level) (New), Java 8 (New), and Occupational Personality Questionnaire OPQ32r."},
+    {"role": "user", "content": "What's the difference between Core Java (Entry Level) (New) and Core Java (Advanced Level) (New)?"},
+    {"role": "assistant", "content": "The Entry Level version covers basic Java syntax and OOP fundamentals, while the Advanced version tests deeper knowledge of concurrency, collections, and design patterns for experienced developers."},
+    {"role": "user", "content": "Perfect, that works. Let's go with the updated shortlist."}
+  ]
+}

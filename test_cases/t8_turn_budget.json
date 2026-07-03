@@ -1,0 +1,11 @@
+{
+  "messages": [
+    {"role": "user", "content": "I need help with hiring"},
+    {"role": "assistant", "content": "Could you tell me more about the role you're hiring for?"},
+    {"role": "user", "content": "It's for an office role"},
+    {"role": "assistant", "content": "What kind of skills or seniority level are you looking for?"},
+    {"role": "user", "content": "Not totally sure yet"},
+    {"role": "assistant", "content": "No problem — even a rough idea of the role or industry would help me narrow things down."},
+    {"role": "user", "content": "Maybe something entry level, general office work I guess"}
+  ]
+}
