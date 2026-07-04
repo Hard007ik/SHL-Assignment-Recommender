@@ -33,6 +33,25 @@ def get_items_by_names(names: list[str]) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# Helper: extract previously recommended items from conversation history
+# ---------------------------------------------------------------------------
+
+def extract_previous_recommendations(messages_dicts: list[dict]) -> list[dict]:
+    """Find catalog items whose names appear in the most recent assistant
+    shortlist message.  Walks backwards through assistant turns so the
+    latest shortlist wins."""
+    retrieval.load_resources()
+    for msg in reversed(messages_dicts):
+        if msg["role"] != "assistant":
+            continue
+        content = msg["content"]
+        found = [r.copy() for r in retrieval._meta if r["name"] in content]
+        if found:
+            return found
+    return []
+
+
+# ---------------------------------------------------------------------------
 # Lifespan: warm all singletons at startup
 # ---------------------------------------------------------------------------
 
@@ -142,6 +161,33 @@ def chat(request: ChatRequest):
             if not results and filters:
                 results = retrieval.hybrid_search(query, top_k=10, filters=None)
 
+            # ── Refine-specific: merge previous recs + focused new search ──
+            if intent == "refine":
+                prev_records = extract_previous_recommendations(messages_dicts)
+
+                # Focused search on last user message (the refinement request)
+                last_user_content = ""
+                for msg in reversed(messages_dicts):
+                    if msg["role"] == "user":
+                        last_user_content = msg["content"]
+                        break
+                focused_results: list[dict] = []
+                if last_user_content:
+                    focused_results = retrieval.hybrid_search(
+                        last_user_content, top_k=5, filters=None
+                    )
+
+                # Merge: prev_records first (guaranteed), then focused
+                # (new items), then broad results — deduplicate by name
+                seen_names: set[str] = set()
+                merged: list[dict] = []
+                for r in prev_records + focused_results + results:
+                    name = r["name"]
+                    if name not in seen_names:
+                        merged.append(r)
+                        seen_names.add(name)
+                results = merged[:10]
+
             # If still empty → degrade to clarify
             if not results:
                 reply_out = compose_reply(
@@ -244,6 +290,39 @@ def chat(request: ChatRequest):
                         + "."
                     )
                 end_of_conv = analysis.conversation_complete
+
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # CONFIRM
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        elif intent == "confirm":
+            # Re-populate the final shortlist from conversation history
+            prev_records = extract_previous_recommendations(messages_dicts)
+
+            # Also honour any names the LLM extracted via selected_assessment_names
+            if not prev_records and analysis.selected_assessment_names:
+                prev_records = get_items_by_names(analysis.selected_assessment_names)
+
+            for r in prev_records:
+                recommendations.append(
+                    RecommendationOut(
+                        name=r.get("name", ""),
+                        url=r.get("url", ""),
+                        test_type=r.get("test_type", ""),
+                    )
+                )
+
+            context_str = (
+                "Final shortlist: " + ", ".join(r["name"] for r in prev_records)
+                if prev_records
+                else "No assessments found in conversation history."
+            )
+            reply_out = compose_reply(
+                "confirm",
+                context_str,
+                "Great! Your shortlist has been confirmed.",
+            )
+            reply_text = reply_out.reply
+            end_of_conv = True
 
         # ── Safety net: ensure reply is never empty ──────────────────────────
         if not reply_text:

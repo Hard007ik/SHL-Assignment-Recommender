@@ -26,7 +26,7 @@ class ChatResponse(BaseModel):
 
 
 class TurnAnalysis(BaseModel):
-    intent: Literal["clarify", "recommend", "refine", "compare", "refuse"]
+    intent: Literal["clarify", "recommend", "refine", "compare", "refuse", "confirm"]
     role_or_context: str | None
     seniority: str | None
     must_have_skills: list[str]
